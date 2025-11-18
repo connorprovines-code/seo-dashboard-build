@@ -1,12 +1,13 @@
 """Vercel serverless function handler for FastAPI"""
 import sys
-import os
+from pathlib import Path
 
 # Add backend to Python path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'backend'))
+backend_path = str(Path(__file__).parent.parent / "backend")
+sys.path.insert(0, backend_path)
 
-from backend.app.main import app
+from app.main import app
 from mangum import Mangum
 
-# Create handler for Vercel
+# Create Mangum handler for ASGI application
 handler = Mangum(app, lifespan="off")
