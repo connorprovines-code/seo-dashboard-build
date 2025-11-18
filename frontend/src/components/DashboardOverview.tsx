@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
-import { rankTrackingApi, keywordsApi } from '../services/api'
+import { rankTrackingApi } from '../services/api'
 
 interface DashboardOverviewProps {
   projectId: string
