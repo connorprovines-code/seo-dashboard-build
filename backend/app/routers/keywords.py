@@ -1,16 +1,11 @@
 """Keywords router"""
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
 from typing import List
 from uuid import UUID
 from datetime import datetime
 
 from app.core.database import get_db
 from app.core.deps import get_current_user
-from app.models.user import User
-from app.models.project import Project
-from app.models.keyword import Keyword
-from app.models.api_usage_log import ApiUsageLog
 from app.schemas.keyword import (
     KeywordCreate,
     KeywordBulkCreate,

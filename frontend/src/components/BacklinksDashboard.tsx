@@ -141,7 +141,6 @@ function SummaryCard({
   value,
   icon,
   color,
-  trend
 }: {
   title: string
   value: string

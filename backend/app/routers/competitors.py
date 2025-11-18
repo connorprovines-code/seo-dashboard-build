@@ -1,19 +1,11 @@
 """Competitors router"""
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
-from sqlalchemy import func, and_
 from typing import List
 from uuid import UUID
 from pydantic import BaseModel
 
 from app.core.database import get_db
 from app.core.deps import get_current_user
-from app.models.user import User
-from app.models.project import Project
-from app.models.competitor import CompetitorDomain
-from app.models.keyword import Keyword
-from app.models.serp_snapshot import SerpSnapshot
-from app.models.rank_tracking import RankTracking
 
 router = APIRouter(prefix="/api/projects/{project_id}/competitors", tags=["competitors"])
 

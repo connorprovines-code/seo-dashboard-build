@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.core.config import settings
-from app.core.database import engine, Base
+from app.core.database import init_db
 from app.routers import auth, projects, api_credentials, keywords, rank_tracking, competitors, ai_assistant, backlinks, webhooks
 
 # Create FastAPI application
@@ -28,9 +28,8 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize database on startup"""
-    # Create all tables
-    Base.metadata.create_all(bind=engine)
+    """Initialize Supabase connection on startup"""
+    init_db()
 
 
 @app.on_event("shutdown")

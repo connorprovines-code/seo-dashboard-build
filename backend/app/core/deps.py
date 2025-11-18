@@ -1,12 +1,12 @@
 """Dependencies for FastAPI routes"""
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.orm import Session
+from supabase import Client
 from typing import Optional
 
 from app.core.database import get_db
 from app.core.security import decode_access_token
-from app.models.user import User
+from app.services.supabase_service import UserService
 
 # OAuth2 scheme for token authentication
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
@@ -14,8 +14,8 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 def get_current_user(
     token: str = Depends(oauth2_scheme),
-    db: Session = Depends(get_db)
-) -> User:
+    db: Client = Depends(get_db)
+) -> dict:
     """
     Dependency to get current authenticated user from JWT token.
     Raises HTTP 401 if token is invalid or user not found.
@@ -36,15 +36,15 @@ def get_current_user(
         raise credentials_exception
 
     # Get user from database
-    user = db.query(User).filter(User.id == user_id).first()
+    user = UserService.get_by_id(db, user_id)
     if user is None:
         raise credentials_exception
 
     return user
 
 
-def get_current_user_id(current_user: User = Depends(get_current_user)) -> str:
+def get_current_user_id(current_user: dict = Depends(get_current_user)) -> str:
     """
     Dependency to get current user's ID.
     """
-    return str(current_user.id)
+    return str(current_user['id'])

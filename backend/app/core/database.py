@@ -1,50 +1,46 @@
-"""Database configuration and session management"""
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
+"""Database configuration - Supabase client"""
+from supabase import create_client, Client
 from typing import Generator
 
 from app.core.config import settings
 
-# Create SQLAlchemy engine
-engine = create_engine(
-    settings.DATABASE_URL,
-    pool_pre_ping=True,
-    pool_size=10,
-    max_overflow=20,
-    echo=settings.DEBUG,
-)
-
-# Create SessionLocal class
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Base class for models
-Base = declarative_base()
+# Create Supabase client
+_supabase_client: Client = None
 
 
-def get_db() -> Generator[Session, None, None]:
+def get_supabase() -> Client:
     """
-    Dependency to get database session.
-    Yields a database session and ensures it's closed after use.
+    Get or create Supabase client singleton.
+    Returns the Supabase client instance.
     """
-    db = SessionLocal()
+    global _supabase_client
+    if _supabase_client is None:
+        _supabase_client = create_client(
+            supabase_url=settings.SUPABASE_URL,
+            supabase_key=settings.SUPABASE_ANON_KEY
+        )
+    return _supabase_client
+
+
+def get_db() -> Generator[Client, None, None]:
+    """
+    Dependency to get Supabase client.
+    Yields a Supabase client for use in route handlers.
+    """
+    client = get_supabase()
     try:
-        yield db
+        yield client
     finally:
-        db.close()
+        # Supabase client doesn't need explicit cleanup
+        pass
 
 
 def init_db() -> None:
-    """Initialize database tables"""
-    # Import all models here to ensure they are registered with Base
-    from app.models import (
-        user,
-        project,
-        keyword,
-        rank_tracking,
-        competitor,
-        serp_snapshot,
-        api_credential,
-        api_usage_log,
-    )
-    Base.metadata.create_all(bind=engine)
+    """
+    Initialize Supabase connection.
+    Note: Tables should be created via Supabase dashboard or migrations.
+    """
+    # Test connection
+    client = get_supabase()
+    # Supabase handles connection pooling automatically
+    pass

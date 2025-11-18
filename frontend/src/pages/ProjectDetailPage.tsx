@@ -3,12 +3,10 @@ import { useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { projectsApi, keywordsApi, credentialsApi, rankTrackingApi } from '../services/api'
 import APISetupModal from '../components/APISetupModal'
-import RankHistoryChart from '../components/RankHistoryChart'
 import { DashboardOverview } from '../components/DashboardOverview'
 import { CompetitorManager } from '../components/CompetitorManager'
 import { CompetitorAnalysis } from '../components/CompetitorAnalysis'
 import { AIChat } from '../components/AIChat'
-import { AIPermissions } from '../components/AIPermissions'
 import { BacklinksDashboard } from '../components/BacklinksDashboard'
 
 export default function ProjectDetailPage() {

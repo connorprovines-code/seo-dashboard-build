@@ -1,6 +1,5 @@
 """AI Assistant router using Claude"""
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
 from uuid import UUID
 from pydantic import BaseModel
 from typing import List, Dict, Optional
@@ -9,14 +8,7 @@ import json
 from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.core.security import decrypt_data
-from app.models.user import User
-from app.models.project import Project
-from app.models.keyword import Keyword
-from app.models.serp_snapshot import SerpSnapshot
-from app.models.api_credential import ApiCredential
-from app.models.rank_tracking import RankTracking
 from app.services.claude_ai import ClaudeAIService
-from sqlalchemy import func
 
 router = APIRouter(prefix="/api/ai", tags=["ai-assistant"])
 

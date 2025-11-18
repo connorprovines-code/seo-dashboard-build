@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { aiApi } from '../services/api'
 
 interface Permission {
   id: string
@@ -53,7 +52,7 @@ export function AIPermissions() {
   })
 
   // Fetch current permissions
-  const { data: currentPermissions, isLoading } = useQuery({
+  const { isLoading } = useQuery({
     queryKey: ['ai-permissions'],
     queryFn: async () => {
       // This would call the API to get current permissions
@@ -64,7 +63,7 @@ export function AIPermissions() {
 
   // Grant permission mutation
   const grantMutation = useMutation({
-    mutationFn: async (permissionId: string) => {
+    mutationFn: async (_permissionId: string) => {
       // This would call the API to grant permission
       // await aiApi.grantPermission(permissionId)
       return { success: true }
@@ -76,7 +75,7 @@ export function AIPermissions() {
 
   // Revoke permission mutation
   const revokeMutation = useMutation({
-    mutationFn: async (permissionId: string) => {
+    mutationFn: async (_permissionId: string) => {
       // This would call the API to revoke permission
       // await aiApi.revokePermission(permissionId)
       return { success: true }
