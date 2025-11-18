@@ -1,0 +1,54 @@
+# FastAPI and server
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-multipart==0.0.6
+
+# Database - Supabase
+supabase==2.3.4
+postgrest==0.13.2
+
+# Redis and Celery
+redis==5.0.1
+celery==5.3.6
+
+# Authentication
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+bcrypt==4.1.2
+
+# Environment and config
+python-dotenv==1.0.0
+pydantic==2.5.3
+pydantic-settings==2.1.0
+
+# HTTP clients
+# httpx - managed by supabase dependency
+aiohttp==3.9.1
+
+# Google APIs
+google-auth==2.27.0
+google-auth-oauthlib==1.2.0
+google-auth-httplib2==0.2.0
+google-api-python-client==2.115.0
+
+# DataForSEO
+dataforseo-client==1.0.25
+
+# Utilities
+python-slugify==8.0.1
+pytz==2023.3
+
+# Security and encryption
+cryptography==42.0.0
+
+# Testing
+pytest==7.4.4
+pytest-asyncio==0.23.3
+pytest-cov==4.1.0
+
+# Logging and monitoring
+structlog==24.1.0
+
+# Rate limiting
+slowapi==0.1.9
+mangum==0.17.0
