@@ -2,11 +2,11 @@ import { Outlet, Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
 
 export default function Layout() {
-  const { user, clearAuth } = useAuthStore()
+  const { user, signOut } = useAuthStore()
   const navigate = useNavigate()
 
-  const handleLogout = () => {
-    clearAuth()
+  const handleLogout = async () => {
+    await signOut()
     navigate('/login')
   }
 

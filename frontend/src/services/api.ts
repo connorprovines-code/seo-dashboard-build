@@ -11,12 +11,12 @@ export const api = axios.create({
   },
 })
 
-// Request interceptor to add auth token
+// Request interceptor to add auth token from Supabase
 api.interceptors.request.use(
-  (config) => {
-    const token = useAuthStore.getState().token
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+  async (config) => {
+    const session = useAuthStore.getState().session
+    if (session?.access_token) {
+      config.headers.Authorization = `Bearer ${session.access_token}`
     }
     return config
   },
@@ -31,7 +31,7 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       // Clear auth state on 401 Unauthorized
-      useAuthStore.getState().clearAuth()
+      useAuthStore.getState().signOut()
       window.location.href = '/login'
     }
     return Promise.reject(error)

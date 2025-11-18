@@ -1,38 +1,28 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useMutation } from '@tanstack/react-query'
-import { authApi } from '../services/api'
 import { useAuthStore } from '../stores/authStore'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
-  const { setAuth } = useAuthStore()
+  const { signIn } = useAuthStore()
 
-  const loginMutation = useMutation({
-    mutationFn: async () => {
-      const loginResponse = await authApi.login(email, password)
-      const token = loginResponse.data.access_token
-
-      // Get user info
-      const userResponse = await authApi.getCurrentUser()
-      return { token, user: userResponse.data }
-    },
-    onSuccess: ({ token, user }) => {
-      setAuth(token, user)
-      navigate('/')
-    },
-    onError: (err: any) => {
-      setError(err.response?.data?.detail || 'Login failed')
-    },
-  })
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    loginMutation.mutate()
+    setLoading(true)
+
+    try {
+      await signIn(email, password)
+      navigate('/')
+    } catch (err: any) {
+      setError(err.message || 'Login failed')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -93,10 +83,10 @@ export default function LoginPage() {
           <div>
             <button
               type="submit"
-              disabled={loginMutation.isPending}
+              disabled={loading}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
             >
-              {loginMutation.isPending ? 'Signing in...' : 'Sign in'}
+              {loading ? 'Signing in...' : 'Sign in'}
             </button>
           </div>
         </form>

@@ -26,9 +26,9 @@ function App() {
 
 // Protected route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { token } = useAuthStore()
+  const { user } = useAuthStore()
 
-  if (!token) {
+  if (!user) {
     return <Navigate to="/login" replace />
   }
 
