@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 
 from app.core.config import settings
 from app.core.database import engine, Base
-from app.routers import auth, projects, api_credentials, keywords, rank_tracking, competitors, ai_assistant, backlinks
+from app.routers import auth, projects, api_credentials, keywords, rank_tracking, competitors, ai_assistant, backlinks, webhooks
 
 # Create FastAPI application
 app = FastAPI(
@@ -76,6 +76,7 @@ app.include_router(rank_tracking.router)
 app.include_router(competitors.router)
 app.include_router(ai_assistant.router)
 app.include_router(backlinks.router)
+app.include_router(webhooks.router)
 
 
 # Global exception handler

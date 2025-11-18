@@ -197,4 +197,17 @@ export const backlinksApi = {
     }),
 }
 
+// Webhooks API calls (for n8n integration)
+export const webhooksApi = {
+  triggerOutreach: (projectId: string, data: {
+    webhook_url: string
+    competitor_ids?: string[]
+    custom_targets?: Array<{ domain: string; email?: string }>
+    campaign_name?: string
+    include_backlink_data?: boolean
+  }) => api.post(`/api/webhooks/outreach/trigger?project_id=${projectId}`, data),
+
+  test: () => api.get('/api/webhooks/test'),
+}
+
 export default api
