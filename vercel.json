@@ -22,11 +22,5 @@
       "src": "/(.*)",
       "dest": "frontend/$1"
     }
-  ],
-  "env": {
-    "DATABASE_URL": "@database_url",
-    "REDIS_URL": "@redis_url",
-    "SECRET_KEY": "@secret_key",
-    "ENCRYPTION_KEY": "@encryption_key"
-  }
+  ]
 }
