@@ -1,0 +1,38 @@
+{
+  "version": 2,
+  "name": "seo-dashboard",
+  "builds": [
+    {
+      "src": "backend/app/main.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "backend/app/main.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "frontend/$1"
+    }
+  ],
+  "env": {
+    "ENVIRONMENT": "production",
+    "SQL_ECHO": "false"
+  },
+  "regions": ["iad1"],
+  "functions": {
+    "backend/app/main.py": {
+      "maxDuration": 30,
+      "memory": 1024
+    }
+  }
+}

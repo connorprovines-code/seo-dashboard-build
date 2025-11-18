@@ -1,8 +1,25 @@
 # DIY SEO Dashboard - Complete Build Profile
 
+## 🚀 Quick Deploy to Vercel
+
+This project is now fully configured for **serverless deployment on Vercel**!
+
+**Get started in 30 minutes:**
+1. Read the [Quick Start Guide](QUICKSTART.md)
+2. Follow the [Vercel Deployment Guide](VERCEL_DEPLOYMENT.md)
+3. Learn about [Serverless Architecture](SERVERLESS_ARCHITECTURE.md)
+
+**Total Cost:** $0-20/month (vs. Ahrefs $129/month)
+
+---
+
 ## Project Overview
 
 Build a comprehensive, self-hosted SEO dashboard that replaces expensive tools like Ahrefs and Semrush with a pay-per-use API model. This system will provide keyword research, rank tracking, competitor analysis, and automated backlink outreach capabilities at a fraction of the cost (~$20/month vs $129+/month).
+
+**Now available for both:**
+- ✅ **Vercel Serverless** (recommended for most users)
+- ✅ **Traditional VPS** (Docker + PostgreSQL + Redis + Celery)
 
 ---
 

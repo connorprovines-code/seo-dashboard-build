@@ -1,0 +1,62 @@
+# Core Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# Database
+sqlalchemy==2.0.23
+psycopg2-binary==2.9.9
+alembic==1.12.1
+
+# Redis (for caching and background tasks)
+redis==5.0.1
+upstash-redis==0.15.0
+
+# Authentication
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+bcrypt==4.1.1
+
+# Environment & Configuration
+python-dotenv==1.0.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# HTTP Client
+httpx==0.25.2
+aiohttp==3.9.1
+
+# DataForSEO SDK
+dataforseo-client==1.0.26
+
+# Google APIs
+google-api-python-client==2.108.0
+google-auth-httplib2==0.2.0
+google-auth-oauthlib==1.1.0
+
+# Anthropic Claude API
+anthropic==0.7.7
+
+# Email
+sendgrid==6.11.0
+
+# Background Tasks (Alternative to Celery for serverless)
+# Note: For Vercel, use Vercel Cron Jobs instead of Celery
+# apscheduler==3.10.4
+
+# Monitoring & Logging
+sentry-sdk==1.38.0
+structlog==23.2.0
+
+# Utilities
+python-dateutil==2.8.2
+pytz==2023.3
+
+# Security
+cryptography==41.0.7
+
+# CORS
+starlette==0.27.0
+
+# For Vercel Python runtime
+mangum==0.17.0
