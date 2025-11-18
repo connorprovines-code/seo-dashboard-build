@@ -1,101 +1,94 @@
 """
-Database configuration for Vercel deployment
-Supports connection pooling optimized for serverless environments
+Supabase client configuration for SEO Dashboard
+Simplified database access using Supabase Python client
 """
 import os
-from typing import Generator
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy.pool import NullPool
+from supabase import create_client, Client
+from typing import Optional
 import logging
 
 logger = logging.getLogger(__name__)
 
-# Get database URL from environment
-DATABASE_URL = os.getenv("DATABASE_URL")
+# Supabase configuration
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_ANON_KEY")
 
-if not DATABASE_URL:
-    raise ValueError("DATABASE_URL environment variable is not set")
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise ValueError("SUPABASE_URL and SUPABASE_ANON_KEY environment variables are required")
 
-# Fix postgres:// to postgresql:// if needed (some platforms use old format)
-if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
-
-# Vercel/Serverless optimization: Use NullPool to prevent connection pooling
-# This is important for serverless environments where connections should not persist
-# between function invocations
-engine = create_engine(
-    DATABASE_URL,
-    poolclass=NullPool,  # No connection pooling for serverless
-    echo=os.getenv("SQL_ECHO", "false").lower() == "true",  # SQL query logging
-    pool_pre_ping=True,  # Verify connections before using
-    connect_args={
-        "connect_timeout": 10,
-        "options": "-c timezone=utc",
-    },
-)
-
-# For local development with traditional connection pooling (optional)
-if os.getenv("ENVIRONMENT") == "development":
-    engine = create_engine(
-        DATABASE_URL,
-        pool_size=5,
-        max_overflow=10,
-        pool_pre_ping=True,
-        echo=os.getenv("SQL_ECHO", "false").lower() == "true",
-        connect_args={
-            "connect_timeout": 10,
-            "options": "-c timezone=utc",
-        },
-    )
-
-# Create SessionLocal class
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Base class for models
-Base = declarative_base()
+# Create Supabase client
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
-def get_db() -> Generator[Session, None, None]:
+def get_supabase() -> Client:
     """
-    Dependency function for FastAPI to get database session.
+    Get Supabase client instance.
 
-    Usage:
+    Usage in FastAPI:
         @app.get("/items")
-        def read_items(db: Session = Depends(get_db)):
-            return db.query(Item).all()
+        def read_items(db: Client = Depends(get_supabase)):
+            return db.table('items').select('*').execute()
     """
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+    return supabase
 
 
-def init_db():
+def check_db_connection() -> bool:
     """
-    Initialize database tables.
-    This should only be used in development.
-    For production, use Alembic migrations.
-    """
-    import app.models  # Import models to register them
-
-    logger.info("Creating database tables...")
-    Base.metadata.create_all(bind=engine)
-    logger.info("Database tables created successfully")
-
-
-def check_db_connection():
-    """
-    Check if database connection is working.
-    Useful for health checks in serverless environments.
+    Check if Supabase connection is working.
+    Useful for health checks.
     """
     try:
-        db = SessionLocal()
-        db.execute("SELECT 1")
-        db.close()
+        # Try a simple query to verify connection
+        result = supabase.table('users').select('id').limit(1).execute()
         return True
     except Exception as e:
-        logger.error(f"Database connection failed: {e}")
+        logger.error(f"Supabase connection failed: {e}")
         return False
+
+
+# Helper functions for common operations
+class SupabaseHelpers:
+    """Helper methods for common Supabase operations"""
+
+    @staticmethod
+    def get_by_id(table: str, id: str):
+        """Get a single record by ID"""
+        return supabase.table(table).select('*').eq('id', id).single().execute()
+
+    @staticmethod
+    def get_all(table: str, filters: dict = None, order_by: str = None):
+        """Get all records with optional filters"""
+        query = supabase.table(table).select('*')
+
+        if filters:
+            for key, value in filters.items():
+                query = query.eq(key, value)
+
+        if order_by:
+            query = query.order(order_by)
+
+        return query.execute()
+
+    @staticmethod
+    def insert(table: str, data: dict):
+        """Insert a new record"""
+        return supabase.table(table).insert(data).execute()
+
+    @staticmethod
+    def update(table: str, id: str, data: dict):
+        """Update a record by ID"""
+        return supabase.table(table).update(data).eq('id', id).execute()
+
+    @staticmethod
+    def delete(table: str, id: str):
+        """Delete a record by ID"""
+        return supabase.table(table).delete().eq('id', id).execute()
+
+    @staticmethod
+    def upsert(table: str, data: dict):
+        """Insert or update a record"""
+        return supabase.table(table).upsert(data).execute()
+
+
+# Export commonly used items
+__all__ = ['supabase', 'get_supabase', 'check_db_connection', 'SupabaseHelpers']

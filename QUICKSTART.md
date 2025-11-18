@@ -1,96 +1,53 @@
 # Quick Start Guide - Vercel Deployment
 
-Get your SEO Dashboard deployed to Vercel in under 30 minutes!
+Get your SEO Dashboard deployed to Vercel in under 20 minutes!
 
 ## Prerequisites Checklist
 
 - [ ] GitHub account
 - [ ] Vercel account (free at https://vercel.com)
-- [ ] Credit card (for database, but free tiers available)
+- [ ] Supabase account (free at https://supabase.com)
 
-## 5-Step Deployment
+## 4-Step Deployment
 
-### Step 1: Set Up Database (5 minutes)
+### Step 1: Set Up Supabase Database (5 minutes)
 
-**Option A: Neon.tech (Free Tier)**
+1. Go to https://supabase.com
+2. Click "Start your project"
+3. Create a new project:
+   - Name: `seo-dashboard`
+   - Database Password: (choose a strong password)
+   - Region: Choose closest to your users
+4. Wait ~2 minutes for database to provision
+5. Go to **SQL Editor** in left sidebar
+6. Copy the SQL from `backend/database/schema.sql` in your repo
+7. Paste it into the SQL editor and click **Run**
+8. Go to **Project Settings** → **API**
+9. Copy these values:
+   - **Project URL** (looks like: `https://xxx.supabase.co`)
+   - **Anon/Public Key** (long JWT token)
 
-1. Go to https://neon.tech
-2. Sign up with GitHub
-3. Click "Create Project"
-4. Name it: `seo-dashboard`
-5. Copy the connection string (looks like: `postgresql://user:pass@ep-xxx.region.aws.neon.tech/...`)
-6. Save it for Step 3
+**That's it!** No connection strings, no passwords needed for deployment.
 
-**Option B: Vercel Postgres ($20/month)**
-
-1. Go to https://vercel.com/dashboard
-2. Click "Storage" → "Create Database"
-3. Select "Postgres"
-4. Name it: `seo-dashboard`
-5. Vercel will auto-set `DATABASE_URL` for you
-
-### Step 2: Set Up Redis Cache (3 minutes)
-
-1. Go to https://console.upstash.com
-2. Sign up (free)
-3. Click "Create Database"
-4. Name it: `seo-cache`
-5. Select a region close to your database
-6. Copy the `UPSTASH_REDIS_REST_URL`
-7. Save it for Step 3
-
-### Step 3: Initialize Database (2 minutes)
-
-Run this command with your database URL:
-
-```bash
-# Install PostgreSQL client (if not installed)
-# macOS: brew install postgresql
-# Ubuntu: sudo apt install postgresql-client
-
-# Run the schema
-psql "YOUR_DATABASE_URL_FROM_STEP_1" < backend/database/schema.sql
-```
-
-Or use the web SQL editor provided by Neon/Vercel Postgres.
-
-### Step 4: Get API Keys (10 minutes)
-
-#### DataForSEO (Required - for SEO data)
+### Step 2: Get DataForSEO API Keys (5 minutes)
 
 1. Go to https://app.dataforseo.com/register
 2. Sign up (you get $1 free credit)
 3. Go to Dashboard → API Access
-4. Copy your **Login** and **Password**
-5. Save them for Step 5
+4. Copy your **Login** (email) and **Password**
 
-#### Google Search Console (Optional but recommended)
+### Step 3: Deploy to Vercel (8 minutes)
 
-1. Go to https://console.cloud.google.com/
-2. Create a new project: `seo-dashboard`
-3. Enable "Google Search Console API"
-4. Create OAuth 2.0 credentials:
-   - Application type: Web application
-   - Authorized redirect URI: `https://YOUR-APP.vercel.app/api/auth/google/callback`
-5. Copy **Client ID** and **Client Secret**
-6. Save them for Step 5
-
-### Step 5: Deploy to Vercel (10 minutes)
-
-#### 5.1: Push to GitHub
+#### 3.1: Push to GitHub
 
 ```bash
-# Initialize git if not done
-git init
+# If not already pushed
 git add .
-git commit -m "Initial commit: SEO Dashboard for Vercel"
-
-# Create GitHub repo and push
-gh repo create seo-dashboard --public --source=. --remote=origin --push
-# Or manually create on GitHub and push
+git commit -m "Ready for Vercel deployment"
+git push origin main
 ```
 
-#### 5.2: Import to Vercel
+#### 3.2: Import to Vercel
 
 1. Go to https://vercel.com/new
 2. Click "Import Project"
@@ -98,38 +55,42 @@ gh repo create seo-dashboard --public --source=. --remote=origin --push
 4. Vercel will auto-detect settings from `vercel.json`
 5. **Don't deploy yet!** Click "Environment Variables"
 
-#### 5.3: Add Environment Variables
+#### 3.3: Add Environment Variables
 
 Add these variables in Vercel:
 
-```
-DATABASE_URL=postgresql://... (from Step 1)
-REDIS_URL=rediss://... (from Step 2)
-SECRET_KEY=[generate: openssl rand -hex 32]
-DATAFORSEO_LOGIN=your_login (from Step 4)
-DATAFORSEO_PASSWORD=your_password (from Step 4)
-GOOGLE_CLIENT_ID=xxx.apps.googleusercontent.com (from Step 4)
-GOOGLE_CLIENT_SECRET=xxx (from Step 4)
+```bash
+# Supabase (from Step 1)
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=eyJhbGciOiJIUz... (your anon key)
+
+# DataForSEO (from Step 2)
+DATAFORSEO_LOGIN=your-email@example.com
+DATAFORSEO_PASSWORD=your_password
+
+# Security (generate this)
+SECRET_KEY=[run: openssl rand -hex 32]
+
+# App Config
+ENVIRONMENT=production
 FRONTEND_URL=https://your-app-name.vercel.app
 JWT_ALGORITHM=HS256
 JWT_EXPIRE_MINUTES=43200
-ENVIRONMENT=production
+CORS_ORIGINS=https://your-app-name.vercel.app
 ```
 
-Generate SECRET_KEY:
+**To generate SECRET_KEY:**
 ```bash
 openssl rand -hex 32
 ```
 
-#### 5.4: Deploy!
+#### 3.4: Deploy!
 
-1. Click "Deploy"
+1. Click **Deploy**
 2. Wait 2-3 minutes
 3. Your app will be live at `https://your-app-name.vercel.app`
 
-## Post-Deployment
-
-### Test Your Deployment
+### Step 4: Test Your Deployment (2 minutes)
 
 1. Visit `https://your-app-name.vercel.app/api/health`
 2. You should see:
@@ -143,32 +104,39 @@ openssl rand -hex 32
 
 3. Visit `https://your-app-name.vercel.app/docs` to see the API documentation
 
-### Set Up Background Jobs (Optional)
+## Optional: Add Redis Cache
 
-Create a cron job for daily rank tracking:
+For better performance (optional, recommended for production):
 
-1. Add to `vercel.json`:
-   ```json
-   {
-     "crons": [
-       {
-         "path": "/api/cron/daily-rank-check",
-         "schedule": "0 2 * * *"
-       }
-     ]
-   }
+1. Go to https://console.upstash.com
+2. Sign up (free)
+3. Create a Redis database: `seo-cache`
+4. Copy the Redis URL
+5. Add to Vercel environment variables:
    ```
-
-2. Generate a CRON_SECRET:
-   ```bash
-   openssl rand -hex 32
+   REDIS_URL=rediss://default:xxx@xxx.upstash.io:6379
    ```
+6. Redeploy
 
-3. Add `CRON_SECRET` to Vercel environment variables
+## Optional: Google Search Console
 
-4. Redeploy
+For free ranking data from your own sites:
 
-### Add Custom Domain (Optional)
+1. Go to https://console.cloud.google.com/
+2. Create a new project: `seo-dashboard`
+3. Enable "Google Search Console API"
+4. Create OAuth 2.0 credentials:
+   - Application type: Web application
+   - Authorized redirect URI: `https://your-app.vercel.app/api/auth/google/callback`
+5. Add to Vercel environment variables:
+   ```
+   GOOGLE_CLIENT_ID=xxx.apps.googleusercontent.com
+   GOOGLE_CLIENT_SECRET=xxx
+   GOOGLE_REDIRECT_URI=https://your-app.vercel.app/api/auth/google/callback
+   ```
+6. Redeploy
+
+## Custom Domain (Optional)
 
 1. Go to Vercel Project Settings → Domains
 2. Add your domain: `dashboard.yourdomain.com`
@@ -179,62 +147,52 @@ Create a cron job for daily rank tracking:
 
 ### Database connection failed
 
-```bash
-# Test your connection string
-psql "YOUR_DATABASE_URL" -c "SELECT 1"
-```
+- Go to Supabase dashboard → SQL Editor
+- Run: `SELECT * FROM users LIMIT 1;`
+- If it works, your database is fine
+- Check your `SUPABASE_URL` and `SUPABASE_ANON_KEY` in Vercel
 
-If it fails:
-- Check your IP is whitelisted (Neon/Vercel Postgres)
-- Verify the connection string format
-- Try adding `?sslmode=require` to the URL
+### API endpoint returns 500
 
-### Deployment timeout
+- Check Vercel logs: `vercel logs --follow`
+- Make sure all environment variables are set
+- Redeploy after changing environment variables
 
-- Increase timeout in `vercel.json`:
-  ```json
-  {
-    "functions": {
-      "backend/app/main.py": {
-        "maxDuration": 60
-      }
-    }
-  }
-  ```
+### DataForSEO not working
 
-### API keys not working
-
-- Go to Vercel Dashboard → Settings → Environment Variables
-- Click "Redeploy" after changing variables
-
-## Next Steps
-
-1. **Create a user account**: Use the `/api/auth/register` endpoint
-2. **Create your first project**: Track your first website
-3. **Add keywords**: Start tracking keyword rankings
-4. **Connect Google Search Console**: Get free ranking data
-5. **Set up monitoring**: Add Sentry for error tracking
+- Verify your credentials at https://app.dataforseo.com/
+- Make sure you have credits remaining
+- Check `DATAFORSEO_LOGIN` and `DATAFORSEO_PASSWORD` are correct
 
 ## Cost Breakdown
 
 | Service | Plan | Monthly Cost |
 |---------|------|--------------|
 | Vercel | Hobby | $0 |
-| Neon Database | Free Tier | $0 |
-| Upstash Redis | Free Tier | $0 |
+| Supabase | Free Tier | $0 |
 | DataForSEO | Pay-per-use | ~$5-20 |
 | **Total** | | **$5-20/month** |
 
 **vs. Ahrefs**: $129/month → **Save $109-124/month!**
 
+## What's Next?
+
+1. **Build the frontend** - React app to interact with the API
+2. **Create user accounts** - Use `/api/auth/register`
+3. **Add your first project** - Track a website
+4. **Import keywords** - Start tracking rankings
+5. **Set up cron jobs** - Automated daily rank checks
+
 ## Support
 
-- Documentation: See `VERCEL_DEPLOYMENT.md`
+- Full docs: See `VERCEL_DEPLOYMENT.md`
+- Supabase help: https://supabase.com/docs
+- DataForSEO docs: https://docs.dataforseo.com/
 - Issues: Create a GitHub issue
-- Community: Join our Discord (link in README)
 
 ---
 
-**Congratulations! Your SEO Dashboard is now live on Vercel! 🎉**
+**Congratulations! Your SEO Dashboard is now live! 🎉**
 
-Visit your app and start tracking your SEO performance!
+Total setup time: ~20 minutes
+Monthly cost: $5-20 (vs Ahrefs $129/month)

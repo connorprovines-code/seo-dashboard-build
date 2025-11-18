@@ -3,10 +3,8 @@ fastapi==0.104.1
 uvicorn[standard]==0.24.0
 python-multipart==0.0.6
 
-# Database
-sqlalchemy==2.0.23
-psycopg2-binary==2.9.9
-alembic==1.12.1
+# Database - Supabase Client
+supabase==2.3.0
 
 # Redis (for caching and background tasks)
 redis==5.0.1
@@ -39,10 +37,6 @@ anthropic==0.7.7
 
 # Email
 sendgrid==6.11.0
-
-# Background Tasks (Alternative to Celery for serverless)
-# Note: For Vercel, use Vercel Cron Jobs instead of Celery
-# apscheduler==3.10.4
 
 # Monitoring & Logging
 sentry-sdk==1.38.0
