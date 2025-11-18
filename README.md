@@ -1,5 +1,72 @@
 # DIY SEO Dashboard - Complete Build Profile
 
+---
+
+## 🤖 Claude Desktop Quick Start
+
+**Hey Claude!** To get this running locally:
+
+### Option 1: With Docker (Easiest - One Command)
+```bash
+docker-compose up -d
+
+# Access the app:
+# Frontend: http://localhost:3000
+# Backend API: http://localhost:8000
+# API Docs: http://localhost:8000/api/docs
+```
+
+### Option 2: Without Docker (Manual Setup)
+```bash
+# 1. Backend Setup
+cd backend
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+
+# 2. Create .env file with SQLite (no PostgreSQL needed!)
+cat > .env << 'EOF'
+DATABASE_URL=sqlite:///./seo_dashboard.db
+REDIS_URL=redis://localhost:6379/0
+SECRET_KEY=$(openssl rand -base64 32)
+ENCRYPTION_KEY=$(openssl rand -base64 32)
+JWT_ALGORITHM=HS256
+JWT_EXPIRE_MINUTES=43200
+FRONTEND_URL=http://localhost:3000
+BACKEND_URL=http://localhost:8000
+ENVIRONMENT=development
+DEBUG=True
+EOF
+
+# 3. Run database migrations
+alembic upgrade head
+
+# 4. Start backend
+uvicorn app.main:app --reload
+
+# In a new terminal:
+# 5. Frontend Setup
+cd frontend
+npm install
+npm run dev
+```
+
+### Quick Test
+Once running:
+1. Open http://localhost:3000
+2. Register an account
+3. Create a project (e.g., "My Website")
+4. Add keywords
+5. Explore all 6 tabs: Overview, Keywords, Rankings, Competitors, AI Assistant, Backlinks
+
+### What You'll Need
+- **Immediately**: Nothing! SQLite works out of the box
+- **For keyword research**: DataForSEO API key (get $1 free trial at https://dataforseo.com/)
+- **For AI assistant**: Anthropic Claude API key (https://console.anthropic.com/)
+- **Progressive onboarding**: The app will prompt you when you need each API key
+
+---
+
 ## Project Overview
 
 Build a comprehensive, self-hosted SEO dashboard that replaces expensive tools like Ahrefs and Semrush with a pay-per-use API model. This system will provide keyword research, rank tracking, competitor analysis, and automated backlink outreach capabilities at a fraction of the cost (~$20/month vs $129+/month).
