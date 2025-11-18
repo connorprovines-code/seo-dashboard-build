@@ -8,11 +8,48 @@ Build a comprehensive, self-hosted SEO dashboard that replaces expensive tools l
 
 ## Core Philosophy
 
+- **Project-based architecture**: Each website/domain is a separate project with isolated data
 - **Snapshot-based data storage**: Query APIs on-demand, store results locally, refresh when needed
 - **Pay-per-use economics**: Only pay for data you actually need
 - **Multi-source data aggregation**: Combine Google Search Console (free) with DataForSEO APIs (cheap)
 - **Own your data**: All historical data stored locally in your database
 - **Modular architecture**: Build in phases, each module independent and testable
+- **Progressive API onboarding**: System guides users through API setup when features are first accessed
+
+---
+
+## User Flow: Project-Based Workflow
+
+```
+1. User registers/logs in
+   └─> Lands on dashboard (empty state if first time)
+
+2. User clicks "Create New Project"
+   └─> Modal: "What website do you want to track?"
+       ├─> Input: Domain (e.g., "example.com")
+       ├─> Input: Project Name (e.g., "My Blog")
+       └─> Creates project → Redirects to project dashboard
+
+3. Project Dashboard (per-project view)
+   ├─> Tab: Overview (metrics summary)
+   ├─> Tab: Keywords (manage keyword list)
+   ├─> Tab: Rankings (track positions over time)
+   ├─> Tab: Competitors (add competitors to monitor)
+   ├─> Tab: AI Assistant (chat with Claude)
+   └─> Tab: Settings (API keys, integrations)
+
+4. When user first accesses a feature requiring API:
+   └─> Shows modal: "This feature needs [API Name]"
+       ├─> Explains what it does
+       ├─> Shows cost estimate
+       ├─> Link to get API key
+       └─> Input field to paste API key
+
+5. All data scoped to project_id
+   └─> Switch projects via dropdown in header
+```
+
+**Key UX Principle:** Users can create unlimited projects (one per website they manage), and each project has its own keywords, rankings, competitors, and settings. Think of it like Google Analytics properties or Ahrefs projects.
 
 ---
 
@@ -183,6 +220,348 @@ Build a comprehensive, self-hosted SEO dashboard that replaces expensive tools l
 - `response_status` (integer)
 - `created_at` (timestamp)
 - Index: `(user_id, created_at)`
+
+#### `api_credentials` (NEW - Store per-user API keys)
+- `id` (UUID, primary key)
+- `user_id` (foreign key → users)
+- `provider` (string) // 'dataforseo', 'google', 'anthropic'
+- `credentials_encrypted` (text) // JSON blob with login/password or tokens
+- `is_active` (boolean)
+- `created_at` (timestamp)
+- `last_verified_at` (timestamp, nullable)
+- Unique index: `(user_id, provider)`
+
+---
+
+## API Setup & Onboarding Flow
+
+### Progressive Disclosure Pattern
+
+The system should **NOT** ask for all API keys upfront. Instead, prompt users when they first use a feature:
+
+```
+User clicks "Add Keywords" → System checks if DataForSEO credentials exist
+  ├─> If YES: Proceed with keyword research
+  └─> If NO: Show "Setup DataForSEO API" modal
+      ├─> Explain: "To get keyword data, we use DataForSEO API"
+      ├─> Cost: "~$0.07 per 1,000 keywords"
+      ├─> Steps to get API key:
+      │   1. Go to https://dataforseo.com/apis
+      │   2. Sign up (they offer $1 free trial)
+      │   3. Copy your Login and Password from dashboard
+      ├─> Input fields:
+      │   - DataForSEO Login: [_____________]
+      │   - DataForSEO Password: [_____________]
+      │   - [ ] Save for all my projects
+      └─> Button: "Test & Save Credentials"
+          └─> Backend: Test API call → Encrypt → Store in api_credentials
+```
+
+### API Credentials Flow by Feature
+
+| Feature | Required API | When to Ask | Fallback |
+|---------|-------------|-------------|----------|
+| **Create Project** | None | N/A | N/A |
+| **Add Keywords** | DataForSEO Labs API | First time clicking "Research Keywords" | Can add keywords manually without volume data |
+| **Rank Tracking** | DataForSEO SERP API | When enabling rank tracking for first keyword | N/A |
+| **Google Search Console** | Google OAuth | When clicking "Connect GSC" button | Optional feature |
+| **AI Assistant** | Anthropic Claude API | When first opening AI chat | Can be admin-provided (not user) |
+| **Backlinks** | DataForSEO Backlinks API | When accessing Backlinks tab | N/A |
+
+### Implementation: API Setup Modal Component
+
+```typescript
+// frontend/src/components/APISetupModal.tsx
+interface APISetupModalProps {
+  provider: 'dataforseo' | 'google' | 'anthropic'
+  feature: string // "keyword research", "rank tracking", etc.
+  onComplete: () => void
+}
+
+export function APISetupModal({ provider, feature, onComplete }: APISetupModalProps) {
+  const apiInfo = {
+    dataforseo: {
+      name: "DataForSEO",
+      cost: "$0.07 per 1,000 keywords",
+      signupUrl: "https://app.dataforseo.com/register",
+      docsUrl: "https://docs.dataforseo.com/v3/",
+      fields: [
+        { name: "login", label: "Login/Email", type: "text" },
+        { name: "password", label: "API Password", type: "password" }
+      ],
+      instructions: [
+        "Go to https://app.dataforseo.com/register",
+        "Sign up (get $1 free credits)",
+        "Go to Dashboard > API Access",
+        "Copy your Login and Password"
+      ]
+    },
+    google: {
+      name: "Google Search Console",
+      cost: "Free!",
+      signupUrl: "https://search.google.com/search-console",
+      docsUrl: "https://developers.google.com/webmaster-tools",
+      fields: [], // OAuth flow, no manual input
+      instructions: [
+        "Click 'Connect with Google' below",
+        "Authorize access to your Search Console data",
+        "Select which site to connect"
+      ]
+    },
+    anthropic: {
+      name: "Claude AI (Anthropic)",
+      cost: "~$0.003 per message",
+      signupUrl: "https://console.anthropic.com/",
+      docsUrl: "https://docs.anthropic.com/",
+      fields: [
+        { name: "api_key", label: "API Key", type: "password" }
+      ],
+      instructions: [
+        "Go to https://console.anthropic.com/",
+        "Sign up for an account",
+        "Get API key from Settings > API Keys",
+        "Note: This may be admin-provided in self-hosted setups"
+      ]
+    }
+  }
+
+  const info = apiInfo[provider]
+
+  return (
+    <Modal title={`Setup ${info.name} API`}>
+      <div className="space-y-4">
+        <div className="bg-blue-50 p-4 rounded">
+          <p className="font-semibold">Why do we need this?</p>
+          <p className="text-sm">To use {feature}, we need access to {info.name}.</p>
+          <p className="text-sm font-bold mt-2">Cost: {info.cost}</p>
+        </div>
+
+        <div className="space-y-2">
+          <p className="font-semibold">How to get your API key:</p>
+          <ol className="list-decimal list-inside space-y-1 text-sm">
+            {info.instructions.map((step, i) => (
+              <li key={i}>{step}</li>
+            ))}
+          </ol>
+          <a href={info.signupUrl} target="_blank" className="text-blue-600 text-sm">
+            → Open {info.name} signup page
+          </a>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          {info.fields.map(field => (
+            <div key={field.name} className="mb-3">
+              <label className="block text-sm font-medium mb-1">
+                {field.label}
+              </label>
+              <input
+                type={field.type}
+                name={field.name}
+                className="w-full p-2 border rounded"
+                required
+              />
+            </div>
+          ))}
+
+          <div className="flex items-center mb-4">
+            <input type="checkbox" id="saveForAll" className="mr-2" />
+            <label htmlFor="saveForAll" className="text-sm">
+              Save credentials for all my projects
+            </label>
+          </div>
+
+          <div className="flex gap-3">
+            <button type="submit" className="btn-primary">
+              Test & Save Credentials
+            </button>
+            <button type="button" onClick={onSkip} className="btn-secondary">
+              Skip for Now
+            </button>
+          </div>
+        </form>
+
+        <div className="text-xs text-gray-500">
+          🔒 Your API credentials are encrypted and never shared. You can update or remove them anytime from Settings.
+        </div>
+      </div>
+    </Modal>
+  )
+}
+```
+
+### Backend: API Credentials Management
+
+```python
+# backend/app/routers/api_credentials.py
+from fastapi import APIRouter, Depends, HTTPException
+from app.services.encryption import encrypt_data, decrypt_data
+from app.services.api_validators import test_dataforseo_credentials, test_google_oauth
+
+router = APIRouter(prefix="/api/credentials", tags=["credentials"])
+
+@router.post("/setup/{provider}")
+async def setup_api_credentials(
+    provider: str,
+    credentials: dict,
+    user_id: str = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+):
+    """
+    Store and test API credentials for a provider.
+    Credentials are encrypted before storage.
+    """
+
+    # Validate provider
+    valid_providers = ["dataforseo", "google", "anthropic"]
+    if provider not in valid_providers:
+        raise HTTPException(400, f"Invalid provider. Must be one of: {valid_providers}")
+
+    # Test credentials first
+    try:
+        if provider == "dataforseo":
+            test_result = await test_dataforseo_credentials(
+                credentials.get("login"),
+                credentials.get("password")
+            )
+        elif provider == "google":
+            test_result = await test_google_oauth(credentials.get("access_token"))
+        elif provider == "anthropic":
+            test_result = await test_anthropic_key(credentials.get("api_key"))
+
+        if not test_result["success"]:
+            raise HTTPException(400, f"Invalid credentials: {test_result['error']}")
+
+    except Exception as e:
+        raise HTTPException(400, f"Failed to validate credentials: {str(e)}")
+
+    # Encrypt credentials
+    encrypted = encrypt_data(json.dumps(credentials))
+
+    # Store in database (upsert)
+    cred_record = db.query(ApiCredential)\
+        .filter(ApiCredential.user_id == user_id, ApiCredential.provider == provider)\
+        .first()
+
+    if cred_record:
+        cred_record.credentials_encrypted = encrypted
+        cred_record.is_active = True
+        cred_record.last_verified_at = datetime.now()
+    else:
+        cred_record = ApiCredential(
+            user_id=user_id,
+            provider=provider,
+            credentials_encrypted=encrypted,
+            is_active=True,
+            last_verified_at=datetime.now()
+        )
+        db.add(cred_record)
+
+    db.commit()
+
+    return {
+        "success": True,
+        "provider": provider,
+        "message": f"{provider} credentials saved successfully"
+    }
+
+@router.get("/check/{provider}")
+async def check_credentials_exist(
+    provider: str,
+    user_id: str = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+):
+    """
+    Check if user has credentials for a provider.
+    Used by frontend to determine if setup modal should show.
+    """
+    cred = db.query(ApiCredential)\
+        .filter(
+            ApiCredential.user_id == user_id,
+            ApiCredential.provider == provider,
+            ApiCredential.is_active == True
+        )\
+        .first()
+
+    return {
+        "exists": cred is not None,
+        "provider": provider,
+        "last_verified": cred.last_verified_at if cred else None
+    }
+
+@router.delete("/{provider}")
+async def remove_credentials(
+    provider: str,
+    user_id: str = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+):
+    """Remove stored API credentials"""
+    db.query(ApiCredential)\
+        .filter(ApiCredential.user_id == user_id, ApiCredential.provider == provider)\
+        .update({"is_active": False})
+
+    db.commit()
+
+    return {"success": True, "message": f"{provider} credentials removed"}
+```
+
+### Frontend: Hook for API Check
+
+```typescript
+// frontend/src/hooks/useAPICredentials.ts
+export function useAPICredentials(provider: 'dataforseo' | 'google' | 'anthropic') {
+  const [showSetup, setShowSetup] = useState(false)
+
+  const { data: credCheck } = useQuery({
+    queryKey: ['api-credentials', provider],
+    queryFn: () => api.get(`/credentials/check/${provider}`)
+  })
+
+  const requireCredentials = (callback: () => void) => {
+    if (credCheck?.exists) {
+      callback() // Credentials exist, proceed
+    } else {
+      setShowSetup(true) // Show setup modal
+    }
+  }
+
+  return {
+    hasCredentials: credCheck?.exists,
+    showSetup,
+    setShowSetup,
+    requireCredentials
+  }
+}
+
+// Usage in a component:
+function KeywordResearchButton() {
+  const { hasCredentials, showSetup, setShowSetup, requireCredentials } =
+    useAPICredentials('dataforseo')
+
+  const handleClick = () => {
+    requireCredentials(() => {
+      // This only runs if credentials exist
+      openKeywordResearchModal()
+    })
+  }
+
+  return (
+    <>
+      <button onClick={handleClick}>Research Keywords</button>
+
+      {showSetup && (
+        <APISetupModal
+          provider="dataforseo"
+          feature="keyword research"
+          onComplete={() => {
+            setShowSetup(false)
+            openKeywordResearchModal()
+          }}
+        />
+      )}
+    </>
+  )
+}
+```
 
 ---
 
