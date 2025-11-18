@@ -135,4 +135,66 @@ export const rankTrackingApi = {
     api.get(`/api/projects/${projectId}/rank-tracking/stats/overview`),
 }
 
+// Competitors API calls
+export const competitorsApi = {
+  list: (projectId: string) => api.get(`/api/projects/${projectId}/competitors`),
+
+  add: (projectId: string, data: { domain: string; notes?: string }) =>
+    api.post(`/api/projects/${projectId}/competitors`, data),
+
+  delete: (projectId: string, competitorId: string) =>
+    api.delete(`/api/projects/${projectId}/competitors/${competitorId}`),
+
+  getKeywordOverlap: (projectId: string) =>
+    api.get(`/api/projects/${projectId}/competitors/analysis/keyword-overlap`),
+
+  getGapAnalysis: (projectId: string, competitorId: string) =>
+    api.get(`/api/projects/${projectId}/competitors/analysis/gap-analysis`, {
+      params: { competitor_id: competitorId }
+    }),
+
+  getSerpFeatures: (projectId: string) =>
+    api.get(`/api/projects/${projectId}/competitors/analysis/serp-features`),
+}
+
+// AI Assistant API calls
+export const aiApi = {
+  chat: (data: {
+    message: string
+    project_id?: string
+    conversation_history?: Array<{ role: string; content: string }>
+  }) => api.post('/api/ai/chat', data),
+
+  analyzeKeywords: (projectId: string) =>
+    api.post('/api/ai/analyze/keywords', { project_id: projectId }),
+
+  analyzeSERP: (projectId: string, keywordId: string) =>
+    api.post('/api/ai/analyze/serp', {
+      project_id: projectId,
+      keyword_id: keywordId
+    }),
+
+  generateContentBrief: (projectId: string, keywordId: string) =>
+    api.post('/api/ai/generate/content-brief', {
+      project_id: projectId,
+      keyword_id: keywordId
+    }),
+}
+
+// Backlinks API calls
+export const backlinksApi = {
+  getSummary: (projectId: string) =>
+    api.get(`/api/projects/${projectId}/backlinks/summary`),
+
+  getList: (projectId: string, limit?: number, offset?: number) =>
+    api.get(`/api/projects/${projectId}/backlinks/list`, {
+      params: { limit, offset }
+    }),
+
+  getReferringDomains: (projectId: string, limit?: number) =>
+    api.get(`/api/projects/${projectId}/backlinks/referring-domains`, {
+      params: { limit }
+    }),
+}
+
 export default api
