@@ -106,4 +106,33 @@ export const keywordsApi = {
     api.delete(`/api/projects/${projectId}/keywords/${keywordId}`),
 }
 
+// Rank Tracking API calls
+export const rankTrackingApi = {
+  list: (projectId: string) => api.get(`/api/projects/${projectId}/rank-tracking`),
+
+  enable: (projectId: string, data: {
+    keyword_id: string
+    tracked_url: string
+    location_code?: number
+    language_code?: string
+  }) => api.post(`/api/projects/${projectId}/rank-tracking`, data),
+
+  getHistory: (projectId: string, keywordId: string, days?: number) =>
+    api.get(`/api/projects/${projectId}/rank-tracking/${keywordId}/history`, {
+      params: { days }
+    }),
+
+  getSerp: (projectId: string, keywordId: string) =>
+    api.get(`/api/projects/${projectId}/rank-tracking/${keywordId}/serp`),
+
+  checkNow: (projectId: string, keywordId: string) =>
+    api.post(`/api/projects/${projectId}/rank-tracking/${keywordId}/check-now`),
+
+  stop: (projectId: string, keywordId: string) =>
+    api.delete(`/api/projects/${projectId}/rank-tracking/${keywordId}`),
+
+  getStats: (projectId: string) =>
+    api.get(`/api/projects/${projectId}/rank-tracking/stats/overview`),
+}
+
 export default api
