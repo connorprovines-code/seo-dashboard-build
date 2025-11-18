@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "name": "seo-dashboard",
   "builds": [
     {
       "src": "backend/app/main.py",
@@ -25,14 +24,9 @@
     }
   ],
   "env": {
-    "ENVIRONMENT": "production",
-    "SQL_ECHO": "false"
-  },
-  "regions": ["iad1"],
-  "functions": {
-    "backend/app/main.py": {
-      "maxDuration": 30,
-      "memory": 1024
-    }
+    "DATABASE_URL": "@database_url",
+    "REDIS_URL": "@redis_url",
+    "SECRET_KEY": "@secret_key",
+    "ENCRYPTION_KEY": "@encryption_key"
   }
 }

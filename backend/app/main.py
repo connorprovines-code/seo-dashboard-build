@@ -1,144 +1,102 @@
-"""
-SEO Dashboard - FastAPI Main Application
-Optimized for Vercel serverless deployment
-"""
-from fastapi import FastAPI, Request
+"""Main FastAPI application"""
+from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from contextlib import asynccontextmanager
-import os
-import logging
-from datetime import datetime
 
-# Import database
-from app.core.database import check_db_connection
+from app.core.config import settings
+from app.core.database import engine, Base
+from app.routers import auth, projects, api_credentials, keywords, rank_tracking, competitors, ai_assistant, backlinks, webhooks
 
-# Logging setup
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
-# Optional: Sentry integration
-if os.getenv("SENTRY_DSN"):
-    import sentry_sdk
-    from sentry_sdk.integrations.fastapi import FastApiIntegration
-
-    sentry_sdk.init(
-        dsn=os.getenv("SENTRY_DSN"),
-        integrations=[FastApiIntegration()],
-        environment=os.getenv("ENVIRONMENT", "production"),
-        traces_sample_rate=0.1,
-    )
-    logger.info("Sentry error tracking initialized")
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Application lifespan events"""
-    # Startup
-    logger.info("Starting SEO Dashboard API...")
-    logger.info(f"Environment: {os.getenv('ENVIRONMENT', 'development')}")
-
-    # Check database connection
-    if check_db_connection():
-        logger.info("Database connection successful")
-    else:
-        logger.error("Database connection failed!")
-
-    yield
-
-    # Shutdown
-    logger.info("Shutting down SEO Dashboard API...")
-
-
-# Create FastAPI app
+# Create FastAPI application
 app = FastAPI(
-    title="SEO Dashboard API",
-    description="Affordable SEO tracking and analysis platform",
-    version="1.0.0",
-    lifespan=lifespan,
+    title=settings.APP_NAME,
+    version=settings.VERSION,
+    debug=settings.DEBUG,
+    docs_url="/api/docs" if settings.DEBUG else None,
+    redoc_url="/api/redoc" if settings.DEBUG else None,
 )
 
-# CORS configuration
-cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
+# CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=cors_origins,
+    allow_origins=settings.ALLOWED_ORIGINS if not settings.DEBUG else ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database on startup"""
+    # Create all tables
+    Base.metadata.create_all(bind=engine)
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on shutdown"""
+    pass
+
+
 # Health check endpoint
-@app.get("/api/health")
+@app.get("/health", status_code=status.HTTP_200_OK)
 async def health_check():
     """
-    Health check endpoint for monitoring
+    Health check endpoint to verify API is running.
+    Returns service status and basic system info.
     """
-    db_status = check_db_connection()
-
-    return {
-        "status": "healthy" if db_status else "degraded",
-        "timestamp": datetime.utcnow().isoformat(),
-        "environment": os.getenv("ENVIRONMENT", "development"),
-        "checks": {
-            "database": "connected" if db_status else "disconnected",
+    return JSONResponse(
+        content={
+            "status": "healthy",
+            "service": settings.APP_NAME,
+            "version": settings.VERSION,
+            "environment": settings.ENVIRONMENT,
         }
-    }
+    )
 
 
 # Root endpoint
-@app.get("/")
+@app.get("/", status_code=status.HTTP_200_OK)
 async def root():
-    """API root endpoint"""
+    """Root endpoint with API information"""
     return {
-        "name": "SEO Dashboard API",
-        "version": "1.0.0",
-        "status": "operational",
-        "docs": "/docs",
-        "health": "/api/health"
+        "message": f"Welcome to {settings.APP_NAME} API",
+        "version": settings.VERSION,
+        "docs": f"{settings.BACKEND_URL}/api/docs" if settings.DEBUG else "Documentation disabled in production",
     }
 
 
-# Error handlers
+# Include routers
+app.include_router(auth.router)
+app.include_router(projects.router)
+app.include_router(api_credentials.router)
+app.include_router(keywords.router)
+app.include_router(rank_tracking.router)
+app.include_router(competitors.router)
+app.include_router(ai_assistant.router)
+app.include_router(backlinks.router)
+app.include_router(webhooks.router)
+
+
+# Global exception handler
 @app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    """Global exception handler"""
-    logger.error(f"Global error: {exc}", exc_info=True)
-
-    return JSONResponse(
-        status_code=500,
-        content={
-            "error": "Internal server error",
-            "message": str(exc) if os.getenv("ENVIRONMENT") == "development" else "An error occurred"
-        }
-    )
-
-
-# Import and include routers (to be created)
-# from app.routers import auth, projects, keywords, rank_tracking, api_credentials
-# app.include_router(auth.router)
-# app.include_router(projects.router)
-# app.include_router(keywords.router)
-# app.include_router(rank_tracking.router)
-# app.include_router(api_credentials.router)
-
-
-# For Vercel deployment
-# Vercel will use this handler
-handler = app
-
-
-# For local development
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=True,
-        log_level="info"
-    )
+async def global_exception_handler(request, exc):
+    """Handle uncaught exceptions"""
+    if settings.DEBUG:
+        # In debug mode, show full error
+        import traceback
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "detail": "Internal server error",
+                "error": str(exc),
+                "traceback": traceback.format_exc()
+            }
+        )
+    else:
+        # In production, hide details
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"detail": "Internal server error"}
+        )
