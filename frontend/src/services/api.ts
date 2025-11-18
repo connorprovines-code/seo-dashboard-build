@@ -68,4 +68,42 @@ export const projectsApi = {
   delete: (id: string) => api.delete(`/api/projects/${id}`),
 }
 
+// API Credentials
+export const credentialsApi = {
+  check: (provider: string) => api.get(`/api/credentials/check/${provider}`),
+
+  setup: (provider: string, credentials: any) =>
+    api.post(`/api/credentials/setup/${provider}`, credentials),
+
+  get: (provider: string) => api.get(`/api/credentials/${provider}`),
+
+  delete: (provider: string) => api.delete(`/api/credentials/${provider}`),
+}
+
+// Keywords API calls
+export const keywordsApi = {
+  list: (projectId: string) => api.get(`/api/projects/${projectId}/keywords`),
+
+  get: (projectId: string, keywordId: string) =>
+    api.get(`/api/projects/${projectId}/keywords/${keywordId}`),
+
+  add: (projectId: string, keyword: string) =>
+    api.post(`/api/projects/${projectId}/keywords`, { keyword_text: keyword }),
+
+  bulkAdd: (projectId: string, keywords: string[]) =>
+    api.post(`/api/projects/${projectId}/keywords/bulk`, { keywords }),
+
+  refresh: (projectId: string, keywordId: string) =>
+    api.put(`/api/projects/${projectId}/keywords/${keywordId}/refresh`),
+
+  refreshAll: (projectId: string) =>
+    api.post(`/api/projects/${projectId}/keywords/refresh-all`),
+
+  estimateCost: (projectId: string) =>
+    api.get(`/api/projects/${projectId}/keywords/cost-estimate/refresh`),
+
+  delete: (projectId: string, keywordId: string) =>
+    api.delete(`/api/projects/${projectId}/keywords/${keywordId}`),
+}
+
 export default api
