@@ -4,6 +4,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { projectsApi, keywordsApi, credentialsApi, rankTrackingApi } from '../services/api'
 import APISetupModal from '../components/APISetupModal'
 import RankHistoryChart from '../components/RankHistoryChart'
+import { DashboardOverview } from '../components/DashboardOverview'
+import { CompetitorManager } from '../components/CompetitorManager'
+import { CompetitorAnalysis } from '../components/CompetitorAnalysis'
+import { AIChat } from '../components/AIChat'
+import { AIPermissions } from '../components/AIPermissions'
+import { BacklinksDashboard } from '../components/BacklinksDashboard'
 
 export default function ProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>()
@@ -175,7 +181,7 @@ export default function ProjectDetailPage() {
 
       {/* Tabs */}
       <div className="border-b border-gray-200 mb-6">
-        <nav className="-mb-px flex space-x-8">
+        <nav className="-mb-px flex space-x-8 overflow-x-auto">
           <button
             onClick={() => setActiveTab('overview')}
             className={`${
@@ -206,33 +212,42 @@ export default function ProjectDetailPage() {
           >
             Rankings
           </button>
+          <button
+            onClick={() => setActiveTab('competitors')}
+            className={`${
+              activeTab === 'competitors'
+                ? 'border-primary-500 text-primary-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+          >
+            Competitors
+          </button>
+          <button
+            onClick={() => setActiveTab('ai-assistant')}
+            className={`${
+              activeTab === 'ai-assistant'
+                ? 'border-primary-500 text-primary-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+          >
+            AI Assistant
+          </button>
+          <button
+            onClick={() => setActiveTab('backlinks')}
+            className={`${
+              activeTab === 'backlinks'
+                ? 'border-primary-500 text-primary-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+          >
+            Backlinks
+          </button>
         </nav>
       </div>
 
       {/* Overview Tab */}
-      {activeTab === 'overview' && (
-        <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Project Overview</h2>
-          <p className="text-gray-600 mb-6">
-            Track keywords, rankings, and analyze competitors for this project.
-          </p>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="text-sm font-medium text-gray-500">Keywords</h3>
-              <p className="mt-2 text-2xl font-semibold text-gray-900">{keywords?.length || 0}</p>
-            </div>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="text-sm font-medium text-gray-500">Tracked Rankings</h3>
-              <p className="mt-2 text-2xl font-semibold text-gray-900">{rankStats?.total_tracked || 0}</p>
-            </div>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="text-sm font-medium text-gray-500">Avg. Position</h3>
-              <p className="mt-2 text-2xl font-semibold text-gray-900">
-                {rankStats?.average_position ? rankStats.average_position.toFixed(1) : '-'}
-              </p>
-            </div>
-          </div>
-        </div>
+      {activeTab === 'overview' && projectId && (
+        <DashboardOverview projectId={projectId} />
       )}
 
       {/* Keywords Tab */}
@@ -444,6 +459,51 @@ export default function ProjectDetailPage() {
             )}
           </div>
         </div>
+      )}
+
+      {/* Competitors Tab */}
+      {activeTab === 'competitors' && projectId && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Competitor Manager */}
+            <CompetitorManager projectId={projectId} />
+
+            {/* Competitor Analysis */}
+            <div className="lg:col-span-2">
+              <CompetitorAnalysis projectId={projectId} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI Assistant Tab */}
+      {activeTab === 'ai-assistant' && projectId && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <AIChat projectId={projectId} />
+          </div>
+          <div>
+            <div className="bg-white rounded-lg shadow p-6 mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                About AI Assistant
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Your AI-powered SEO assistant can analyze data, find opportunities, and provide insights.
+              </p>
+              <button
+                onClick={() => window.open('/ai-permissions', '_blank')}
+                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+              >
+                Manage Permissions →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Backlinks Tab */}
+      {activeTab === 'backlinks' && projectId && (
+        <BacklinksDashboard projectId={projectId} />
       )}
 
       {/* Modals... (keeping existing modals) */}
