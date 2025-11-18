@@ -17,8 +17,9 @@ class Settings(BaseSettings):
     BACKEND_URL: str = Field(default="http://localhost:8000")
     FRONTEND_URL: str = Field(default="http://localhost:3000")
 
-    # Database
-    DATABASE_URL: str = Field(..., description="PostgreSQL database URL")
+    # Supabase
+    SUPABASE_URL: str = Field(..., description="Supabase project URL")
+    SUPABASE_ANON_KEY: str = Field(..., description="Supabase anon/public key")
 
     # Redis
     REDIS_URL: str = Field(default="redis://localhost:6379/0")

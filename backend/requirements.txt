@@ -3,11 +3,9 @@ fastapi==0.109.0
 uvicorn[standard]==0.27.0
 python-multipart==0.0.6
 
-# Database
-sqlalchemy==2.0.25
-alembic==1.13.1
-psycopg2-binary==2.9.9
-asyncpg==0.29.0
+# Database - Supabase
+supabase==2.3.4
+postgrest==0.13.2
 
 # Redis and Celery
 redis==5.0.1
