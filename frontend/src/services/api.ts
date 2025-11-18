@@ -1,0 +1,71 @@
+import axios from 'axios'
+import { useAuthStore } from '../stores/authStore'
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
+// Create axios instance
+export const api = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+})
+
+// Request interceptor to add auth token
+api.interceptors.request.use(
+  (config) => {
+    const token = useAuthStore.getState().token
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
+  (error) => {
+    return Promise.reject(error)
+  }
+)
+
+// Response interceptor to handle auth errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Clear auth state on 401 Unauthorized
+      useAuthStore.getState().clearAuth()
+      window.location.href = '/login'
+    }
+    return Promise.reject(error)
+  }
+)
+
+// Auth API calls
+export const authApi = {
+  register: (email: string, password: string) =>
+    api.post('/api/auth/register', { email, password }),
+
+  login: (email: string, password: string) =>
+    api.post('/api/auth/login', new URLSearchParams({ username: email, password }), {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    }),
+
+  getCurrentUser: () => api.get('/api/auth/me'),
+
+  refreshToken: () => api.post('/api/auth/refresh'),
+}
+
+// Projects API calls
+export const projectsApi = {
+  list: () => api.get('/api/projects'),
+
+  get: (id: string) => api.get(`/api/projects/${id}`),
+
+  create: (data: { name: string; domain: string }) =>
+    api.post('/api/projects', data),
+
+  update: (id: string, data: { name?: string; domain?: string }) =>
+    api.put(`/api/projects/${id}`, data),
+
+  delete: (id: string) => api.delete(`/api/projects/${id}`),
+}
+
+export default api
