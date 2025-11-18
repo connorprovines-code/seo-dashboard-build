@@ -3,16 +3,12 @@ Webhook router for external integrations like n8n for email outreach.
 Allows triggering outreach campaigns via HTTP webhooks.
 """
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
 from typing import List, Dict, Any
 from pydantic import BaseModel, HttpUrl
 from uuid import UUID
 
 from app.core.database import get_db
 from app.core.auth import get_current_user
-from app.models.user import User
-from app.models.project import Project
-from app.models.competitor import CompetitorDomain
 
 router = APIRouter(prefix="/api/webhooks", tags=["webhooks"])
 

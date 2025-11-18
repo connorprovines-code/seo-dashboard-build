@@ -1,7 +1,5 @@
 """Rank Tracking router"""
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
-from sqlalchemy import func, desc
 from typing import List, Optional
 from uuid import UUID
 from datetime import datetime, timedelta, date
@@ -9,12 +7,6 @@ import json
 
 from app.core.database import get_db
 from app.core.deps import get_current_user
-from app.models.user import User
-from app.models.project import Project
-from app.models.keyword import Keyword
-from app.models.rank_tracking import RankTracking, SearchEngine
-from app.models.serp_snapshot import SerpSnapshot
-from app.models.api_usage_log import ApiUsageLog
 from app.services.dataforseo import DataForSEOService
 from app.routers.api_credentials import get_user_dataforseo_service
 from pydantic import BaseModel

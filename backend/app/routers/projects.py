@@ -1,13 +1,10 @@
 """Projects router"""
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
 from typing import List
 from uuid import UUID
 
 from app.core.database import get_db
 from app.core.deps import get_current_user
-from app.models.user import User
-from app.models.project import Project
 from app.schemas.project import ProjectCreate, ProjectResponse, ProjectUpdate
 
 router = APIRouter(prefix="/api/projects", tags=["projects"])
