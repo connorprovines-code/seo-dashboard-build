@@ -7,6 +7,9 @@ python-multipart==0.0.6
 supabase==2.3.4
 postgrest==0.13.2
 
+# SQLAlchemy (kept for backwards compatibility with model imports)
+sqlalchemy==2.0.25
+
 # Redis and Celery
 redis==5.0.1
 celery==5.3.6

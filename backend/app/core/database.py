@@ -1,8 +1,13 @@
 """Database configuration - Supabase client"""
 from supabase import create_client, Client
 from typing import Generator
+from sqlalchemy.ext.declarative import declarative_base
 
 from app.core.config import settings
+
+# Dummy Base for backwards compatibility with existing models
+# Models are no longer used but routers still import them
+Base = declarative_base()
 
 # Create Supabase client
 _supabase_client: Client = None
