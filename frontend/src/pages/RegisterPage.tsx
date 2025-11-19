@@ -1,26 +1,17 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useMutation } from '@tanstack/react-query'
-import { authApi } from '../services/api'
+import { useAuthStore } from '../stores/authStore'
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const { signUp } = useAuthStore()
 
-  const registerMutation = useMutation({
-    mutationFn: () => authApi.register(email, password),
-    onSuccess: () => {
-      navigate('/login', { state: { message: 'Registration successful! Please log in.' } })
-    },
-    onError: (err: any) => {
-      setError(err.response?.data?.detail || 'Registration failed')
-    },
-  })
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
@@ -34,7 +25,15 @@ export default function RegisterPage() {
       return
     }
 
-    registerMutation.mutate()
+    setLoading(true)
+    try {
+      await signUp(email, password)
+      navigate('/login', { state: { message: 'Registration successful! Please log in.' } })
+    } catch (err: any) {
+      setError(err.message || 'Registration failed')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -111,10 +110,10 @@ export default function RegisterPage() {
           <div>
             <button
               type="submit"
-              disabled={registerMutation.isPending}
+              disabled={loading}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
             >
-              {registerMutation.isPending ? 'Creating account...' : 'Create account'}
+              {loading ? 'Creating account...' : 'Create account'}
             </button>
           </div>
         </form>
